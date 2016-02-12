@@ -1,0 +1,609 @@
+<html>
+<head>
+<title>Recognition with Bag of Words</title>
+<link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" title="Default" href="styles/github.css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="highlighting/styles/default.css">
+<script src="highlighting/highlight.pack.js"></script>
+
+<style type="text/css">
+body {
+	margin: 0px;
+	width: 100%;
+	font-family: 'Crimson Text', serif;
+	font-size: 20px;
+	background: #fcfcfc;
+}
+h1 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 28px;
+	margin: 25px 0px 0px 0px;
+	text-transform: lowercase;
+
+}
+
+h2 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 32px;
+	margin: 15px 0px 35px 0px;
+	color: #333;	
+	word-spacing: 3px;
+}
+
+h3 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 26px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+h4 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 22px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+
+h5 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 18px;
+	margin: 10px 0px 10px 0px;
+	color: #111;
+	word-spacing: 2px;
+}
+
+p, li {
+	color: #444;
+}
+
+a {
+	color: #DE3737;
+}
+
+.container {
+	margin: 0px auto 0px auto;
+	width: 1160px;
+}
+
+#header {
+	background: #333;
+	width: 100%;
+}
+#tail {
+	background: #777;
+	width: 100%;
+}
+#headersub {
+	color: #ccc;
+	width: 960px;
+	margin: 0px auto 0px auto;
+	padding: 20px 0px 20px 0px;
+}
+
+.chart {
+	width: 480px;
+}
+.lol {
+	font-size: 16px;
+	color: #888;
+	font-style: italic;
+}
+.sep {
+	height: 1px;
+	width: 100%;
+	background: #999;
+	margin: 20px 0px 20px 0px;
+}
+.footer{
+	font-size: 16px;
+}
+.latex {
+	width: 100%;
+}
+
+.latex img {
+	display: block;
+	margin: 0px auto 0px auto;
+}
+
+pre {
+	font-family: 'Droid Sans Mono';
+	font-size: 14px;
+}
+
+table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+table td img {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#contents a {
+}
+</style>
+<script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+</script>
+</head>
+<body>
+<div id="header" >
+<div id="headersub">
+<h1>Zhongyi Luo<span style="color: #DE3737"> ID 903141808 (ECE)</span></h1>
+</div>
+</div>
+<div class="container">
+
+<h2>Project 4 / Scene Recognition with Bag of Words</h2>
+
+<div style="float: right; padding: 20px">
+<img src="p15.jpg" />
+<p style="font-size: 14px">Example of a right floating element.</p>
+</div>
+
+<p> 	This project focus on achieving scene recognition with bag of words. The main technique can be splited into feature representation and classification. In all, there are 15 known categories of test images (100 in each group), and another 1500 images are to be recognized. For feature representation, tiny_image, sift classification and Fisher encoding are applied; while for feature classification, K-nearest neighbor, suport vector machine and Naive Bayes Nearest Neighbor are used. Within these,Deep Learning, Fisher encoding, NBNN (Naive Bayes Nearest Neighbr) are in extra credit.</p>
+<p>		Hence different combination od methods, choice of parameters result in different accuracy. Tiny image and K nearest neighbor can anly make around 20% when Fisher encode combine with SVM can make over 64%. The implement details and results will be stated as follow.</p>
+
+<ol>
+<li>Tiny Image and K-Nearest Neighbor</li>
+<li>Bag of SIFT and K-nearest neighbor</li>
+<li>Bag of SIFT and Support Vector Machine</li>
+<li>plain SIFT and Naive Bayes Nearest Neighbor</li>
+<li>Fisher encode </li>
+<li>Deep learning </li>
+</ol>
+
+<h3>Part 1 Tiny Image and K-Nearest Neighbor</h3>
+<p> 	Tiny Image is one of the simplest image representation. In this part, image is resized into 16*16 resolution with zero means and unit length. And K- Nearest Neighbor is to find the K smallest distance of feature vectors ( one vector for each image, different from NBNN) and decide the classification by the vote of those K-neighbors. Part of code is as follow:</p>
+
+<pre><code>
+...
+for i=1:1:Num
+image = im2double(imread(image_paths{i}));
+image_shrink = imresize(image,[feature_width, feature_width]);
+%% normalization
+raw=reshape(image_shrink,1,[]);   %% should we use im2double here?
+mean=(sum(raw))/(feature_width^2);
+raw=raw-mean;
+raw=raw./(sum(raw.^2));  
+image_feats(i,:)=raw;    %% with negative values
+end
+...
+</code></pre>
+
+<p>		As for choice of parameters, the primary parameter is the number K and threshold is used in order to discard the obviously lay out neighbors.</p>
+<p>		By trying different values, the increase of K does not necessarily increase the accuracy. In following results, K = 10, thresholdh =1.0. The resulting accuracy is 26.1%. (The range of the 'farthest K th neighbor is also shown').</p>
+<table border=1>
+<tr>
+<td>
+<img src="p1.png" width="48%"/>
+<img src="p2.jpg"  width="48%"/>
+</td>
+</tr>
+</table>
+
+<h3>Part 2 Bag of SIFT and nearest neighbor</h3>
+
+<p> 	Different from tiny image. Bag of SIFT can be regarded as a encoding or a voting of based on multiple SIFT features of a image. By clustering SIFT into clusters, the vote from each cluster forge the feature ( one to one ) for the image. 'build_vocaburary' samples the SIFT features from train image and set up basis for histogram. 'get bag of sifts' calculate histogram for both test and train image. Some details can be seen as follow:</p>
+
+<pre><code>
+for i=1:1:Num
+...
+[~, SIFT_features] = vl_dsift(image, 'norm','step',stepsize);
+D = vl_alldist2(single(SIFT_features),vocab');
+...
+for j=1:1:sizeofSIFT
+    temp=D(j,:);
+    [line,ind]=sort(temp);
+    line_feat(ind(1))=line_feat(ind(1))+1;  
+end
+raw_feat=line_feat/sum(line_feat);
+...
+</code></pre>
+
+
+<p>		The parameters includes vocab_size (number of clusters), stepsize for sift, framestep( when sample from every image is not necessary). The result is as follow: accuracy = 26.1% , which is higher than combination of tiny image and K-nearest neighbor, but still need to be improved.(accuracy 52.8%, K=5; accuracy 49.5%, K=1 )</p>
+
+<table border=1>
+<tr>
+<td>
+<img src="p3.jpg" width="48%"/>
+<img src="p4.jpg"  width="48%"/>
+</td>
+</tr>
+</table>
+
+
+<h3>Part 3 Bag of SIFT and Support Vector Machine</h3>
+
+<p>		Here the simplest case of learning is used - linear classifier. The feature of trained image is obtain the hyperplane and test images are categorized based on which side of that hyperplane they fall on. In this project, 15 one.vs.all binary SVM were trained (to tell forest from non-forest etc.) For all the 15 cases, the one that is largest (can be positive or negative) will be taken as the category of test image. Details are as follow:</p>
+
+<pre><code>
+categories = unique(train_labels); 
+num_categories = length(categories);
+...
+[w, b] = vl_svmtrain(train_image_feats', label, LAMBDA(k));  %%weight and offset vector
+...
+end
+%get the distance of test images correspondingly
+Distance=zeros(num_categories,L);
+for i=1:1:num_categories
+    distance = (W(:,i)')*(test_image_feats')+B(i);
+    Distance(i,:)=distance;
+end
+%get the category for test images
+[~,ind]=max(Distance);  
+for j=1:1:L
+    pcategory=categories{ind(j)};
+    predicted_categories{j,1}=pcategory;
+end
+...
+</code></pre>
+
+<p>		The primary parameter of SVM is the value of lambda, regularizes the linear classifier by encouraging W to be of small magnitude. There is a tendency (but not strict) that accuracy grows as lambda decrease, while the time for calculation increase correspondingly. To make sure the process handled in acceptable time (on current machine) with bettered accuracy, my choice of lambda is often below 0.00001. Results are as follow: (accuracy 60.7% sample per 3 image , diction step 10, step 4, lambda 0.0001; accuracy 61.8% sample per 3 image , diction step 10, step 4, lambda 0.000001; )</p>
+
+<table border=1>
+<tr>
+<td>
+<img src="p5.jpg" width="48%"/>
+<img src="p6.jpg"  width="48%"/>
+</td>
+</tr>
+</table>
+
+<p>		Also, one thing need to be point out is that: the sample rate and sift step can also greatly influence the performance of Bag of SIFT + SVM, as follow: (accuracy 59.7%, sample per 3 image, diction step 10, step 10 , lambda 0.000001; accuracy 45.5%, sample per 1 image, diction step 30, step 4 , lambda 0.00001;) </p>
+
+<table border=1>
+<tr>
+<td>
+<img src="p7.jpg" width="48%"/>
+<img src="p8.jpg"  width="48%"/>
+</td>
+</tr>
+</table>
+
+
+<h3>Part 4 plain SIFT and Naive Bayes Nearest Neighbor</h3>
+<p>		In the paper 'Indefense of Nearest Neighbor Based Image Classification' explained the reason why origin nearest neighbor seem inferior to the training classifiers ( discriminative information is always reduced due to rough quantization). When origin Nearest Neighbor deal with image-to-image distance, the Naive Bayes Method deals with Image-to-Class distance. The batch of sift feature obtained from image is not used for histogram or other encoding techniques, but are used directly for distance measurement. The process are as follow: </p>
+
+<img src="NBNN.jpg" width="48%"/>
+
+<pre><code>
+[train_image_feats, train] = sifts_for_every_image(train_image_path, flabel);
+[test_image_feats, test] = sifts_for_every_image(test_image_path, elabel);
+...
+for m=1:1:Num  
+	...
+    for k=1:1:num_categories
+        ind1= train==k;
+        C_feats=train_image_feats(ind1,:); % get all dj for one category  
+        DC = vl_alldist2(C_feats',im_feats'); % these features are already single value
+        [NNC,~]=min(DC);
+        NNDC(k,:)=NNC;
+    end
+    candidate=sum(NNDC,2);
+    [~,IND]=min(candidate);
+    pcategory=categories{IND};
+    predicted_categories{m,1}=pcategory;
+    ...
+end
+</code></pre>
+
+<p>		However, the implementation of this method usually make the process largely slowed down, since all the SIFT features from all images need to be used in distance calculation and locate their counter part nearest neighbor in SIFT features of test images. The For loop below can be really slow when step size increases, and if don't use the for loop, the size of matrix will exceed the limit of Matlab.</p>
+<p>		Hence, my intention here is to notify the improvement of accuracy with compare to origin Nearest Neighbor, to make it run in a acceptable time, I used the step size 30 (which will greatly degenerate the performance as indicated in last part). The result is as follow (accuracy 30.7%, sample per 1 image, diction step 30, step 30 , K-nearest neighbor K=1; accuracy 44.7%, sample per 1 image, diction step 30, step 30 , SVM lambda 0.00001; accuracy 55.8%, sample per 1 image, diction step 30, step 30 , Naive Bayes Nearest Neighbor; ) </p>
+
+<table border=1>
+<tr>
+<td>
+<img src="p9.jpg" width="32%"/>
+<img src="p10.jpg"  width="32%"/>
+<img src="p11.jpg"  width="32%"/>
+</td>
+</tr>
+</table>
+
+<p>		In considering the matrix and running time, I used the step size 30, which could greatly damage the performance, yet the method of NBNN still proved to be comparable with SVM and much better than origin Nearest Neighbor. However, since among the classifications I used, only the SIFT feature can be multiple for one image and experiment on other one-to-one classifiers make no difference from nearest neighbor.  </p>
+
+<h3>Part 5 Fisher Encode</h3>
+
+<p>		While get bag of sift is a straight forward histogram 'encoding' of SIFT features, the Fisher has the greater potential to produce more reliable encoding method for batch of sift features. Following is its implement:</p>
+
+<pre><code>
+for m=1:1:Num
+	...
+    [~, train_SIFT] = vl_dsift(trainim, 'norm','step',stepsize);
+    [~, test_SIFT] = vl_dsift(testim, 'norm','step',stepsize);
+    train_encoding = vl_fisher(single(train_SIFT), means, covariances, priors,'normalized');
+    test_encoding = vl_fisher(single(test_SIFT), means, covariances, priors,'normalized');
+    train_code=[train_code;train_encoding'];
+    test_code=[test_code;test_encoding'];
+    ...
+end
+</code></pre>
+
+<p>		Following result is from combination of Fisher and Nearest Neighbor (K=1): (accuracy 50.6%, sample per 3 image, diction step 4, step 4 , cluster 200, K-nearest neighbor K=1; accuracy 51.8%, sample per 1 image, diction step 4, step 4 , cluster 30, K-nearest neighbor K=1; ) </p>
+
+<p>		Following result is from combination of Fisher and Nearest Neighbor. </p>
+
+<table border=1>
+<tr>
+<td>
+<img src="p12.jpg" width="48%"/>
+<img src="p13.jpg"  width="48%"/>
+</td>
+</tr>
+</table>
+
+<p>		Following result is from combination of Fisher and Support Vector Machine: (accuracy 64.6%, sample per 1 image, diction step 4, step 4 , cluster 30, lambda 0.00001; accuracy 67.1%, sample per 1 image, diction step 4, step 4 , cluster 80, lambda 0.00001; )</p>
+<table border=1>
+<tr>
+<td>
+<img src="p14.jpg" width="48%"/>
+<img src="p15.jpg"  width="48%"/>
+</td>
+</tr>
+</table>
+
+<p>Hence, compare to bag of sift, the Fisher Encoding has better performance. And the number of cluster does not affect the result very much. </p>
+
+<h3>Part 6 Deep Learning</h3>
+
+<p>		By Using the deep learning method and trained model of MatconVet, highly reliable features can be obtained. The implement of Matconvet involves using 'mex' for Xcode in Matlab, I failed several times and used the Citrix connected remote desktop instead. These features are also used in SVM and the implement as well as result are as follow: (accuracy 79.5% combine with nearest neighbor K=5) </p>
+
+<pre><code>
+...
+trainfeat=zeros(1000,1500);
+for j=1:1:1500
+...
+im_ = imresize(im_, net.normalization.imageSize(1:2)) ;
+ima = single(ima) - net.normalization.averageImage ;
+res = vl_simplenn(net, ima) ;
+scores = squeeze(gather(res(end-1).x)) ;
+trainfeat(:,j)=scores;
+end
+...
+</code></pre>
+
+
+<div class="container">
+
+
+<center>
+<h1>CS 143 Project 3 results visualization</h1>
+<img src="p16.jpg">
+
+<br>
+Accuracy (mean of diagonal of confusion matrix) is 0.795
+<p>
+
+<table border=0 cellpadding=4 cellspacing=1>
+<tr>
+<th>Category name</th>
+<th>Accuracy</th>
+<th colspan=2>Sample training images</th>
+<th colspan=2>Sample true positives</th>
+<th colspan=2>False positives with true label</th>
+<th colspan=2>False negatives with wrong predicted label</th>
+</tr>
+<tr>
+<td>Kitchen</td>
+<td>0.860</td>
+<td bgcolor=LightBlue><img src="thumbnails/Kitchen_image_0208.jpg" width=100 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Kitchen_image_0074.jpg" width=107 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Kitchen_image_0043.jpg" width=57 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Kitchen_image_0167.jpg" width=57 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/InsideCity_image_0069.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Store_image_0141.jpg" width=125 height=75><br><small>Store</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Kitchen_image_0154.jpg" width=100 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Kitchen_image_0094.jpg" width=89 height=75><br><small>Office</small></td>
+</tr>
+<tr>
+<td>Store</td>
+<td>0.790</td>
+<td bgcolor=LightBlue><img src="thumbnails/Store_image_0208.jpg" width=103 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Store_image_0101.jpg" width=100 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Store_image_0043.jpg" width=100 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Store_image_0070.jpg" width=101 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/InsideCity_image_0085.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0085.jpg" width=112 height=75><br><small>Industrial</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Store_image_0083.jpg" width=100 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Store_image_0107.jpg" width=100 height=75><br><small>InsideCity</small></td>
+</tr>
+<tr>
+<td>Bedroom</td>
+<td>0.730</td>
+<td bgcolor=LightBlue><img src="thumbnails/Bedroom_image_0183.jpg" width=100 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Bedroom_image_0165.jpg" width=111 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Bedroom_image_0077.jpg" width=90 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Bedroom_image_0150.jpg" width=100 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/LivingRoom_image_0081.jpg" width=101 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/LivingRoom_image_0021.jpg" width=109 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Bedroom_image_0118.jpg" width=114 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Bedroom_image_0138.jpg" width=52 height=75><br><small>Office</small></td>
+</tr>
+<tr>
+<td>LivingRoom</td>
+<td>0.430</td>
+<td bgcolor=LightBlue><img src="thumbnails/LivingRoom_image_0248.jpg" width=100 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/LivingRoom_image_0178.jpg" width=106 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/LivingRoom_image_0024.jpg" width=100 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/LivingRoom_image_0027.jpg" width=100 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Street_image_0135.jpg" width=75 height=75><br><small>Street</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Store_image_0121.jpg" width=57 height=75><br><small>Store</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/LivingRoom_image_0046.jpg" width=100 height=75><br><small>Store</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/LivingRoom_image_0022.jpg" width=100 height=75><br><small>Kitchen</small></td>
+</tr>
+<tr>
+<td>Office</td>
+<td>0.760</td>
+<td bgcolor=LightBlue><img src="thumbnails/Office_image_0125.jpg" width=100 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Office_image_0036.jpg" width=113 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Office_image_0080.jpg" width=102 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Office_image_0034.jpg" width=101 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Store_image_0063.jpg" width=57 height=75><br><small>Store</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Store_image_0149.jpg" width=113 height=75><br><small>Store</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Office_image_0001.jpg" width=101 height=75><br><small>Kitchen</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Office_image_0150.jpg" width=92 height=75><br><small>Kitchen</small></td>
+</tr>
+<tr>
+<td>Industrial</td>
+<td>0.660</td>
+<td bgcolor=LightBlue><img src="thumbnails/Industrial_image_0159.jpg" width=112 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Industrial_image_0036.jpg" width=113 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Industrial_image_0025.jpg" width=118 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Industrial_image_0059.jpg" width=111 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/InsideCity_image_0049.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/InsideCity_image_0122.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Industrial_image_0049.jpg" width=100 height=75><br><small>TallBuilding</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Industrial_image_0137.jpg" width=120 height=75><br><small>Street</small></td>
+</tr>
+<tr>
+<td>Suburb</td>
+<td>0.950</td>
+<td bgcolor=LightBlue><img src="thumbnails/Suburb_image_0224.jpg" width=113 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Suburb_image_0007.jpg" width=113 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Suburb_image_0083.jpg" width=113 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Suburb_image_0081.jpg" width=113 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/InsideCity_image_0092.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Forest_image_0115.jpg" width=75 height=75><br><small>Forest</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Suburb_image_0009.jpg" width=113 height=75><br><small>TallBuilding</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Suburb_image_0003.jpg" width=113 height=75><br><small>InsideCity</small></td>
+</tr>
+<tr>
+<td>InsideCity</td>
+<td>0.680</td>
+<td bgcolor=LightBlue><img src="thumbnails/InsideCity_image_0026.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/InsideCity_image_0102.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/InsideCity_image_0091.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/InsideCity_image_0093.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Street_image_0133.jpg" width=75 height=75><br><small>Street</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Suburb_image_0003.jpg" width=113 height=75><br><small>Suburb</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/InsideCity_image_0137.jpg" width=75 height=75><br><small>Street</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/InsideCity_image_0105.jpg" width=75 height=75><br><small>Street</small></td>
+</tr>
+<tr>
+<td>TallBuilding</td>
+<td>0.920</td>
+<td bgcolor=LightBlue><img src="thumbnails/TallBuilding_image_0178.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/TallBuilding_image_0196.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/TallBuilding_image_0117.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/TallBuilding_image_0044.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0114.jpg" width=49 height=75><br><small>Industrial</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0091.jpg" width=57 height=75><br><small>Industrial</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/TallBuilding_image_0048.jpg" width=75 height=75><br><small>Forest</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/TallBuilding_image_0092.jpg" width=75 height=75><br><small>InsideCity</small></td>
+</tr>
+<tr>
+<td>Street</td>
+<td>0.940</td>
+<td bgcolor=LightBlue><img src="thumbnails/Street_image_0035.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Street_image_0005.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Street_image_0131.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Street_image_0121.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0137.jpg" width=120 height=75><br><small>Industrial</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/InsideCity_image_0133.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Street_image_0064.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Street_image_0050.jpg" width=75 height=75><br><small>Highway</small></td>
+</tr>
+<tr>
+<td>Highway</td>
+<td>0.940</td>
+<td bgcolor=LightBlue><img src="thumbnails/Highway_image_0209.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Highway_image_0159.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Highway_image_0071.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Highway_image_0139.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0072.jpg" width=122 height=75><br><small>Industrial</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Mountain_image_0038.jpg" width=75 height=75><br><small>Mountain</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Highway_image_0014.jpg" width=75 height=75><br><small>TallBuilding</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Highway_image_0032.jpg" width=75 height=75><br><small>Suburb</small></td>
+</tr>
+<tr>
+<td>OpenCountry</td>
+<td>0.730</td>
+<td bgcolor=LightBlue><img src="thumbnails/OpenCountry_image_0271.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/OpenCountry_image_0272.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/OpenCountry_image_0045.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/OpenCountry_image_0033.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Forest_image_0080.jpg" width=75 height=75><br><small>Forest</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Coast_image_0005.jpg" width=75 height=75><br><small>Coast</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/OpenCountry_image_0101.jpg" width=75 height=75><br><small>Highway</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/OpenCountry_image_0032.jpg" width=75 height=75><br><small>Coast</small></td>
+</tr>
+<tr>
+<td>Coast</td>
+<td>0.870</td>
+<td bgcolor=LightBlue><img src="thumbnails/Coast_image_0298.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Coast_image_0108.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Coast_image_0092.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Coast_image_0074.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0102.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0123.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Coast_image_0031.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Coast_image_0005.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+</tr>
+<tr>
+<td>Mountain</td>
+<td>0.790</td>
+<td bgcolor=LightBlue><img src="thumbnails/Mountain_image_0234.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Mountain_image_0313.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Mountain_image_0018.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Mountain_image_0051.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Forest_image_0117.jpg" width=75 height=75><br><small>Forest</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Forest_image_0043.jpg" width=75 height=75><br><small>Forest</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Mountain_image_0096.jpg" width=75 height=75><br><small>Coast</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Mountain_image_0115.jpg" width=75 height=75><br><small>Coast</small></td>
+</tr>
+<tr>
+<td>Forest</td>
+<td>0.870</td>
+<td bgcolor=LightBlue><img src="thumbnails/Forest_image_0097.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Forest_image_0270.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Forest_image_0073.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Forest_image_0093.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0057.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/LivingRoom_image_0043.jpg" width=100 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Forest_image_0043.jpg" width=75 height=75><br><small>Mountain</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Forest_image_0080.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+</tr>
+<tr>
+<th>Category name</th>
+<th>Accuracy</th>
+<th colspan=2>Sample training images</th>
+<th colspan=2>Sample true positives</th>
+<th colspan=2>False positives with true label</th>
+<th colspan=2>False negatives with wrong predicted label</th>
+</tr>
+</table>
+</center>
+<div style="clear:both" >
+<p> 	In conclusion, Tiny Image, Bag of SIFT, and Fisher Encoded SIFT, results from Deep Learning are used as image representations, when K-Nearest Neighbor, Support Vector Machine and Naive Bayes Nearest Neighbor are used as classifiers. The best results are from Deep Learning + K_nearest Neighbor which get 79.5%, Fisher encode + SVM which get 67.1%. For extra findings: </p>
+<ol>
+<li>		The use of Deep Learning does promote the result a lot, but didn't reach 80% in my case, parameters can be further tuned. </li>
+<li>		The nature of Naive Bayes Nearest Neighbor make it either slow or out of Matlab limit when combined with SIFT features. But form the result, when step=30 greatly degraded its performance, NBNN result is better than that of Nearest Neighbor and SVM of the same step level.</li>
+<li>		Fisher Encode is better than straight forward histogram of SIFT. </li>
+<li>	    Also, though not shown in the images, K-nearest Neighbor does not necessarily outperforms Nearest Neighbor (K=1) every time. </li>
+</ol>
+
+<body>
+<div style="float: left; padding: 0px">
+<div id="tail" >
+<div id="headersub">
+<h5>Thank you for your patience. For any problem, my email is zluo60@gatech.edu.</h5>
+</div>
+</div>
+</div>
+</body>
+
+</div>
+</body>
+</html>
